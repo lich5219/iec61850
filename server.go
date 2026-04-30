@@ -3,8 +3,7 @@ package iec61850
 /*
 #include <iec61850_server.h>
 #include <logging_api.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <mms_value.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -450,6 +449,32 @@ func (is *IedServer) UpdateUTCTimeAttributeValue(node *ModelNode, value int64) {
 	C.IedServer_updateUTCTimeAttributeValue(is.server, (*C.DataAttribute)(node._modelNode), C.uint64_t(value))
 }
 
+func (is *IedServer) SetGooseInterfaceId(interfaceId string) {
+	cInterfaceId := C.CString(interfaceId)
+	defer C.free(unsafe.Pointer(cInterfaceId))
+	C.IedServer_setGooseInterfaceId(is.server, cInterfaceId)
+}
+
+func (is *IedServer) SetGooseInterfaceIdEx(logicalNode *ModelNode, gcbName string, interfaceId string) {
+	if logicalNode == nil || logicalNode._modelNode == nil {
+		return
+	}
+	cGCBName := C.CString(gcbName)
+	cInterfaceId := C.CString(interfaceId)
+	defer C.free(unsafe.Pointer(cGCBName))
+	defer C.free(unsafe.Pointer(cInterfaceId))
+	C.IedServer_setGooseInterfaceIdEx(is.server, (*C.LogicalNode)(logicalNode._modelNode), cGCBName, cInterfaceId)
+}
+
+func (is *IedServer) UseGooseVlanTagEx(logicalNode *ModelNode, gcbName string, useVlanTag bool) {
+	if logicalNode == nil || logicalNode._modelNode == nil {
+		return
+	}
+	cGCBName := C.CString(gcbName)
+	defer C.free(unsafe.Pointer(cGCBName))
+	C.IedServer_useGooseVlanTag(is.server, (*C.LogicalNode)(logicalNode._modelNode), cGCBName, C.bool(useVlanTag))
+}
+
 func (is *IedServer) SetLogStorage(logRef, storageDir string, maxEntries int) error {
 	if is == nil || is.server == nil {
 		return fmt.Errorf("IEC61850 server is nil")
@@ -479,6 +504,17 @@ func (is *IedServer) SetLogStorage(logRef, storageDir string, maxEntries int) er
 	return nil
 }
 
+func (is *IedServer) EnableGoosePublishing() {
+	C.IedServer_enableGoosePublishing(is.server)
+}
+
+func (is *IedServer) UpdateBooleanAttributeValue(node *ModelNode, value bool) {
+	if node == nil || node._modelNode == nil {
+		return
+	}
+	C.IedServer_updateBooleanAttributeValue(is.server, (*C.DataAttribute)(node._modelNode), C.bool(value))
+}
+
 // UpdateFloatAttributeValue updates a DataAttribute with a float value.
 func (is *IedServer) UpdateFloatAttributeValue(node *ModelNode, value float32) {
 	if node == nil || node._modelNode == nil {
@@ -487,12 +523,44 @@ func (is *IedServer) UpdateFloatAttributeValue(node *ModelNode, value float32) {
 	C.IedServer_updateFloatAttributeValue(is.server, (*C.DataAttribute)(node._modelNode), C.float(value))
 }
 
+func (is *IedServer) UpdateDoubleAttributeValue(node *ModelNode, value float64) {
+	if node == nil || node._modelNode == nil {
+		return
+	}
+	mmsValue := C.MmsValue_newDouble(C.double(value))
+	defer C.MmsValue_delete(mmsValue)
+	C.IedServer_updateAttributeValue(is.server, (*C.DataAttribute)(node._modelNode), mmsValue)
+}
+
 // UpdateInt32AttributeValue updates a DataAttribute with an Int32 value.
 func (is *IedServer) UpdateInt32AttributeValue(node *ModelNode, value int32) {
 	if node == nil || node._modelNode == nil {
 		return
 	}
 	C.IedServer_updateInt32AttributeValue(is.server, (*C.DataAttribute)(node._modelNode), C.int32_t(value))
+}
+
+func (is *IedServer) UpdateInt64AttributeValue(node *ModelNode, value int64) {
+	if node == nil || node._modelNode == nil {
+		return
+	}
+	C.IedServer_updateInt64AttributeValue(is.server, (*C.DataAttribute)(node._modelNode), C.int64_t(value))
+}
+
+func (is *IedServer) UpdateUnsignedAttributeValue(node *ModelNode, value uint32) {
+	if node == nil || node._modelNode == nil {
+		return
+	}
+	C.IedServer_updateUnsignedAttributeValue(is.server, (*C.DataAttribute)(node._modelNode), C.uint32_t(value))
+}
+
+func (is *IedServer) UpdateMmsStringAttributeValue(node *ModelNode, value string) {
+	if node == nil || node._modelNode == nil {
+		return
+	}
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	C.IedServer_updateVisibleStringAttributeValue(is.server, (*C.DataAttribute)(node._modelNode), cValue)
 }
 
 // UpdateVisibleStringAttributeValue updates a DataAttribute with a visible string value.
@@ -504,6 +572,9 @@ func (is *IedServer) UpdateVisibleStringAttributeValue(attr *DataAttribute, valu
 
 // UpdateQuality updates the quality attribute with an UInt16 value
 func (is *IedServer) UpdateQuality(node *ModelNode, quality uint16) {
+	if node == nil || node._modelNode == nil {
+		return
+	}
 	C.IedServer_updateQuality(is.server, (*C.DataAttribute)(node._modelNode), C.ushort(quality))
 }
 

@@ -4,6 +4,7 @@ package iec61850
 import "C"
 
 import (
+	"fmt"
 	"os"
 	"unsafe"
 )
@@ -68,17 +69,16 @@ func (m *ModelNode) ConvertToDataObject() *DataObject {
 
 func CreateModelFromConfigFileEx(filepath string) (*IedModel, error) {
 	if _, err := os.Stat(filepath); err != nil {
-		if os.IsNotExist(err) {
-			return nil, err
-		}
+		return nil, err
 	}
 	cFilepath := C.CString(filepath)
 	// 释放内存
 	defer C.free(unsafe.Pointer(cFilepath))
-	model := &IedModel{
-		Model: C.ConfigFileParser_createModelFromConfigFileEx(cFilepath),
+	cModel := C.ConfigFileParser_createModelFromConfigFileEx(cFilepath)
+	if cModel == nil {
+		return nil, fmt.Errorf("failed to create IEC61850 model from config file %q", filepath)
 	}
-	return model, nil
+	return &IedModel{Model: cModel}, nil
 }
 
 type LogicalDevice struct {

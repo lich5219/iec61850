@@ -7,13 +7,14 @@ import (
 
 type SCL struct {
 	XMLName           xml.Name           `xml:"SCL"`
+	Xmlns             string             `xml:"xmlns,attr,omitempty"`
 	Header            *Header            `xml:"Header"`
-	Communication     *Communication     `xml:"Communication"`
+	Communication     *Communication     `xml:"Communication,omitempty"`
 	IEDs              []*IED             `xml:"IED" validate:"nonzero"`
 	DataTypeTemplates *DataTypeTemplates `xml:"DataTypeTemplates" validate:"nonzero"`
 
 	// custom
-	FileFullPath string
+	FileFullPath string `xml:"-"`
 }
 
 type Header struct {
@@ -52,18 +53,18 @@ type GSE struct {
 	Address    *PhyComAddress `xml:"Address"`
 
 	// custom
-	MinTime int
-	MaxTime int
+	MinTime int `xml:"-"`
+	MaxTime int `xml:"-"`
 }
 
 type PhyComAddress struct {
 	AddressParameters []*AddressParameter `xml:"P"`
 
 	// custom
-	VlanId       int64
-	VlanPriority int
-	AppId        int64
-	MacAddress   []int
+	VlanId       int64 `xml:"-"`
+	VlanPriority int   `xml:"-"`
+	AppId        int64 `xml:"-"`
+	MacAddress   []int `xml:"-"`
 }
 
 type SMV struct {
@@ -79,10 +80,10 @@ type AddressParameter struct {
 
 type IED struct {
 	Name          string         `xml:"name,attr"`
-	Type          string         `xml:"type,attr"`
-	Manufacturer  string         `xml:"manufacturer,attr"`
-	ConfigVersion string         `xml:"configVersion,attr"`
-	Services      *Services      `xml:"Services"`
+	Type          string         `xml:"type,attr,omitempty"`
+	Manufacturer  string         `xml:"manufacturer,attr,omitempty"`
+	ConfigVersion string         `xml:"configVersion,attr,omitempty"`
+	Services      *Services      `xml:"Services,omitempty"`
 	AccessPoints  []*AccessPoint `xml:"AccessPoint"`
 }
 
@@ -103,14 +104,14 @@ type ConfReportControl struct {
 }
 
 type ReportSettings struct {
-	CbName    string `xml:"cbName,attr"`
-	DatSet    string `xml:"datSet,attr"`
-	RptID     string `xml:"rptID,attr"`
-	OptFields string `xml:"optFields,attr"`
-	BufTime   string `xml:"bufTime,attr"`
-	TrgOps    string `xml:"trgOps,attr"`
-	IntgPd    string `xml:"intgPd,attr"`
-	Owner     bool   `xml:"owner,attr"`
+	CbName    string `xml:"cbName,attr,omitempty"`
+	DatSet    string `xml:"datSet,attr,omitempty"`
+	RptID     string `xml:"rptID,attr,omitempty"`
+	OptFields string `xml:"optFields,attr,omitempty"`
+	BufTime   string `xml:"bufTime,attr,omitempty"`
+	TrgOps    string `xml:"trgOps,attr,omitempty"`
+	IntgPd    string `xml:"intgPd,attr,omitempty"`
+	Owner     bool   `xml:"owner,attr,omitempty"`
 }
 
 type ConfLNs struct {
@@ -129,25 +130,25 @@ type Server struct {
 }
 
 type Authentication struct {
-	None bool `xml:"none,attr"`
+	None bool `xml:"none,attr,omitempty"`
 }
 
 type LogicalDevice struct {
 	Inst   string         `xml:"inst,attr"`
-	LdName string         `xml:"ldName,attr"`
+	LdName string         `xml:"ldName,attr,omitempty"`
 	LN0    *LogicalNode   `xml:"LN0" validate:"nonzero"`
 	LNodes []*LogicalNode `xml:"LN"`
 
 	// custom
-	LogicalNodes []*LogicalNode // 将LN0、LN合并到一个数组中
+	LogicalNodes []*LogicalNode `xml:"-"` // 将LN0、LN合并到一个数组中
 }
 
 type LogicalNode struct {
-	Prefix  string `xml:"prefix,attr"`
+	Prefix  string `xml:"prefix,attr,omitempty"`
 	Inst    string `xml:"inst,attr"`
 	LnClass string `xml:"lnClass,attr"`
 	LnType  string `xml:"lnType,attr"`
-	Desc    string `xml:"desc,attr"`
+	Desc    string `xml:"desc,attr,omitempty"`
 
 	DataSets                  []*DataSet             `xml:"DataSet"`
 	ReportControlBlocks       []*ReportControl       `xml:"ReportControl"`
@@ -159,20 +160,20 @@ type LogicalNode struct {
 	DOINodes                  []*DOINode             `xml:"DOI"`
 
 	// custom
-	SclType     SclType
-	DataObjects []*DataObject
+	SclType     SclType       `xml:"-"`
+	DataObjects []*DataObject `xml:"-"`
 }
 
 type DataSet struct {
 	Name string  `xml:"name,attr"`
-	Desc string  `xml:"desc,attr"`
+	Desc string  `xml:"desc,attr,omitempty"`
 	FCDA []*FCDA `xml:"FCDA"`
 }
 
 type FCDA struct {
 	LdInst  string `xml:"ldInst,attr"`
-	Prefix  string `xml:"prefix,attr"`
-	LnInst  string `xml:"lnInst,attr"`
+	Prefix  string `xml:"prefix,attr,omitempty"`
+	LnInst  string `xml:"lnInst,attr,omitempty"`
 	LnClass string `xml:"lnClass,attr"`
 	DoName  string `xml:"doName,attr"`
 	DaName  string `xml:"daName,attr"`
@@ -181,7 +182,7 @@ type FCDA struct {
 
 type ReportControl struct {
 	Name           string          `xml:"name,attr"`
-	Desc           string          `xml:"desc,attr"`
+	Desc           string          `xml:"desc,attr,omitempty"`
 	DatSet         string          `xml:"datSet,attr"`
 	RptID          string          `xml:"rptID,attr"`
 	ConfRev        string          `xml:"confRev,attr"`
@@ -194,17 +195,17 @@ type ReportControl struct {
 	RptEnabled     *RptEnabled     `xml:"RptEnabled"`
 
 	// custom
-	Indexed bool
+	Indexed bool `xml:"-"`
 }
 
 type GSEControl struct {
 	AppID     string `xml:"appID,attr"`
 	Name      string `xml:"name,attr"`
-	Desc      string `xml:"desc,attr"`
+	Desc      string `xml:"desc,attr,omitempty"`
 	Type      string `xml:"type,attr"`
 	DatSet    string `xml:"datSet,attr"`
 	ConfRev   int    `xml:"confRev,attr"`
-	FixedOffs bool   `xml:"fixedOffs,attr"`
+	FixedOffs bool   `xml:"fixedOffs,attr,omitempty"`
 }
 
 type SampledValueControl struct {
@@ -271,11 +272,11 @@ type OptionFields struct {
 
 type RptEnabled struct {
 	MaxStr    string      `xml:"max,attr"`
-	Desc      string      `xml:"desc,attr"`
+	Desc      string      `xml:"desc,attr,omitempty"`
 	ClientLNs []*ClientLN `xml:"ClientLN"`
 
 	// custom
-	Max int
+	Max int `xml:"-"`
 }
 
 type ClientLN struct {
@@ -296,9 +297,9 @@ type SettingControl struct {
 
 type DOINode struct {
 	Name  string `xml:"name,attr"`
-	Desc  string `xml:"desc,attr"`
-	SAddr string `xml:"sAddr,attr"`
-	Val   *Val   `xml:"Val"`
+	Desc  string `xml:"desc,attr,omitempty"`
+	SAddr string `xml:"sAddr,attr,omitempty"`
+	Val   *Val   `xml:"Val,omitempty"`
 
 	SDINodes []*DOINode `xml:"SDI"`
 	DAINodes []*DOINode `xml:"DAI"`
@@ -309,15 +310,15 @@ type DataTypeTemplates struct {
 	DataObjectTypes    []*DataObjectType    `xml:"DOType"`
 	DataAttributeTypes []*DataAttributeType `xml:"DAType"`
 	EnumTypes          []*EnumerationType   `xml:"EnumType"`
-	TypeDeclarations   []SclType            // 将LNodeType、DOType、DAType、EnumType合并到一个数组中
+	TypeDeclarations   []SclType            `xml:"-"` // 将LNodeType、DOType、DAType、EnumType合并到一个数组中
 }
 
 type sclType struct {
 	Id          string `xml:"id,attr"`
-	Description string `xml:"desc,attr"`
+	Description string `xml:"desc,attr,omitempty"`
 
 	// custom
-	Used bool
+	Used bool `xml:"-"`
 }
 
 type LogicalNodeType struct {
@@ -351,28 +352,28 @@ type EnumerationValue struct {
 type DataObjectDefinition struct {
 	Name      string `xml:"name,attr"`
 	Type      string `xml:"type,attr"`
-	Transient bool   `xml:"transient,attr"`
-	Count     int    `xml:"count,attr"`
+	Transient bool   `xml:"transient,attr,omitempty"`
+	Count     int    `xml:"count,attr,omitempty"`
 
 	// custom
-	SclType SclType
+	SclType SclType `xml:"-"`
 }
 
 type DataAttributeDefinition struct {
 	Name        string `xml:"name,attr"`
-	Fc          string `xml:"fc,attr"`
-	Type        string `xml:"type,attr"`
+	Fc          string `xml:"fc,attr,omitempty"`
+	Type        string `xml:"type,attr,omitempty"`
 	BType       string `xml:"bType,attr"`
-	Count       int    `xml:"count,attr"`
-	DchgTrigger bool   `xml:"dchg,attr"`
-	DupdTrigger bool   `xml:"dupd,attr"`
-	QchgTrigger bool   `xml:"qchg,attr"`
-	Val         *Val   `xml:"Val"`
+	Count       int    `xml:"count,attr,omitempty"`
+	DchgTrigger bool   `xml:"dchg,attr,omitempty"`
+	DupdTrigger bool   `xml:"dupd,attr,omitempty"`
+	QchgTrigger bool   `xml:"qchg,attr,omitempty"`
+	Val         *Val   `xml:"Val,omitempty"`
 
 	// custom
-	AttributeType  AttributeType
-	TriggerOptions *TriggerOptions
-	Value          *DataModelValue
+	AttributeType  AttributeType   `xml:"-"`
+	TriggerOptions *TriggerOptions `xml:"-"`
+	Value          *DataModelValue `xml:"-"`
 }
 
 type Val struct {

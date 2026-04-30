@@ -39,6 +39,11 @@ const (
 )
 
 const (
+	QualityGood    = uint16(QUALITY_VALIDITY_GOOD)
+	QualityInvalid = uint16(QUALITY_VALIDITY_INVALID)
+)
+
+const (
 	VALIDITY_GOOD Validity = iota
 	VALIDITY_INVALID
 	VALIDITY_RESERVED

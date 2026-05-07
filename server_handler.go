@@ -14,6 +14,8 @@ extern ControlHandlerResult controlHandlerBridge(ControlAction action, void* par
 
 extern bool acseAuthenticatorBridge(void* parameter, AcseAuthenticationParameter authParameter, void** securityToken, IsoApplicationReference* appReference);
 
+extern void connectionIndicationHandlerBridge(IedServer self, ClientConnection connection, bool connected, void* parameter);
+
 static Buffer AcseAuthenticationParameter_GetBuffer(AcseAuthenticationParameter authParameter) {
     if (authParameter->mechanism == ACSE_AUTH_PASSWORD) {
         uint8_t *buf = authParameter->value.password.octetString;
@@ -36,9 +38,10 @@ import (
 )
 
 var (
-	callbackIdGen        = atomic.Int32{}
-	writeAccessCallbacks = make(map[int32]*writeAccessCallback)
-	controlCallbacks     = make(map[int32]*controlCallback)
+	callbackIdGen                 = atomic.Int32{}
+	writeAccessCallbacks          = make(map[int32]*writeAccessCallback)
+	controlCallbacks              = make(map[int32]*controlCallback)
+	connectionIndicationCallbacks = make(map[int32]*connectionIndicationCallback)
 )
 
 type writeAccessCallback struct {
@@ -49,6 +52,10 @@ type writeAccessCallback struct {
 type controlCallback struct {
 	node    *ModelNode
 	handler ControlHandler
+}
+
+type connectionIndicationCallback struct {
+	handler ConnectionIndicationHandler
 }
 
 type ControlAction struct {
@@ -75,6 +82,8 @@ type AcseAuthenticationParameter struct {
 type WriteAccessHandler func(node *ModelNode, mmsValue *MmsValue) MmsDataAccessError
 
 type ControlHandler func(node *ModelNode, action *ControlAction, mmsValue *MmsValue, test bool) ControlHandlerResult
+
+type ConnectionIndicationHandler func(connected bool)
 
 type ClientAuthenticator func(securityToken *unsafe.Pointer, authParameter *AcseAuthenticationParameter, appReference *IsoApplicationReference) bool
 
@@ -170,6 +179,14 @@ func acseAuthenticatorBridge(parameter unsafe.Pointer, authParameter C.AcseAuthe
 	return C.bool(result)
 }
 
+//export connectionIndicationHandlerBridge
+func connectionIndicationHandlerBridge(self C.IedServer, connection C.ClientConnection, connected C.bool, parameter unsafe.Pointer) {
+	callbackId := int32(uintptr(parameter))
+	if call, ok := connectionIndicationCallbacks[callbackId]; ok && call.handler != nil {
+		call.handler(bool(connected))
+	}
+}
+
 func (is *IedServer) SetHandleWriteAccess(modelNode *ModelNode, handler WriteAccessHandler) {
 	if modelNode == nil {
 		return
@@ -200,6 +217,20 @@ func (is *IedServer) SetControlHandler(modelNode *ModelNode, handler ControlHand
 	}
 
 	C.IedServer_setControlHandler(is.server, (*C.DataObject)(modelNode._modelNode), (*[0]byte)(C.controlHandlerBridge), cPtr)
+}
+
+func (is *IedServer) SetConnectionIndicationHandler(handler ConnectionIndicationHandler) {
+	if is == nil || is.server == nil {
+		return
+	}
+	if handler == nil {
+		C.IedServer_setConnectionIndicationHandler(is.server, nil, nil)
+		return
+	}
+	callbackId := callbackIdGen.Add(1)
+	cPtr := intToPointerBug58625(callbackId)
+	connectionIndicationCallbacks[callbackId] = &connectionIndicationCallback{handler: handler}
+	C.IedServer_setConnectionIndicationHandler(is.server, (*[0]byte)(C.connectionIndicationHandlerBridge), cPtr)
 }
 
 // intToPointerBug58625 is a helper function to fix issue #58625 in Go | https://github.com/golang/go/issues/58625
